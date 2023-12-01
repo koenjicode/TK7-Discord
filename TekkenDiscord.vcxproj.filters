@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="UE4">
+      <UniqueIdentifier>{0f000464-de2e-48e5-a35e-7e7cb7596649}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mod">
+      <UniqueIdentifier>{5e9905c0-4bbb-46a4-8002-8adc3490cc17}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\UnrealEngineModLoader\UE4\Basic.cpp">
+      <Filter>UE4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\UnrealEngineModLoader\UE4\CoreUObject_functions.cpp">
+      <Filter>UE4</Filter>
+    </ClCompile>
+    <ClCompile Include="TekkenDiscord.cpp">
+      <Filter>Mod</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\achievement_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\activity_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\application_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\core.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\image_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\lobby_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\network_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\overlay_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\relationship_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\storage_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\store_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\types.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\user_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\Discord\voice_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bin\include\tekken_discord_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\UnrealEngineModLoader\UE4\Ue4.hpp">
+      <Filter>UE4</Filter>
+    </ClInclude>
+    <ClInclude Include="TekkenDiscord.h">
+      <Filter>Mod</Filter>
+    </ClInclude>
+    <ClInclude Include="Includes\Discord\voice_manager.h" />
+    <ClInclude Include="bin\include\Discord\achievement_manager.h" />
+    <ClInclude Include="bin\include\Discord\activity_manager.h" />
+    <ClInclude Include="bin\include\Discord\application_manager.h" />
+    <ClInclude Include="bin\include\Discord\core.h" />
+    <ClInclude Include="bin\include\Discord\discord.h" />
+    <ClInclude Include="bin\include\Discord\event.h" />
+    <ClInclude Include="bin\include\Discord\ffi.h" />
+    <ClInclude Include="bin\include\Discord\image_manager.h" />
+    <ClInclude Include="bin\include\Discord\lobby_manager.h" />
+    <ClInclude Include="bin\include\Discord\network_manager.h" />
+    <ClInclude Include="bin\include\Discord\overlay_manager.h" />
+    <ClInclude Include="bin\include\Discord\relationship_manager.h" />
+    <ClInclude Include="bin\include\Discord\storage_manager.h" />
+    <ClInclude Include="bin\include\Discord\store_manager.h" />
+    <ClInclude Include="bin\include\Discord\types.h" />
+    <ClInclude Include="bin\include\Discord\user_manager.h" />
+    <ClInclude Include="bin\include\Discord\voice_manager.h" />
+    <ClInclude Include="bin\include\MemoryManager.h" />
+    <ClInclude Include="bin\include\ObjectProxy.h" />
+    <ClInclude Include="bin\include\tekken_discord_manager.h" />
+    <ClInclude Include="bin\include\TekkenEntities.h" />
+  </ItemGroup>
+</Project>
