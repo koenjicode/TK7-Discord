@@ -186,10 +186,38 @@ void TekkenDiscord::FetchAndUpdateDiscordStatus()
 	TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_pointer_p1{ baseAddress, 0x34DF630, 0x218, 0x0 };
 	if (!CanReadGameMode())
 	{
-		status.state = "Waiting";
-		status.details = "";
+		TekkenOverlayCommon::DataAccess::ObjectProxy<int> character_select_p1{ baseAddress,  0x034D65C0, 0x508 };
+		TekkenOverlayCommon::DataAccess::ObjectProxy<int> character_select_p2{ baseAddress,  0x034D65C0, 0x948 };
+		if (character_select_p1.IsValid())
+		{
+			TekkenOverlayCommon::DataAccess::ObjectProxy<int> menu_selected{ baseAddress,  0x34D5B50};
+			if (menu_selected != 5)
+			{
+				if (character_select_p1 == 255 && character_select_p2 == 255)
+				{
+					status.state = "Side Select";
+				}
+				else
+				{
+					status.state = "Character Select";
+					bool left_side_selected = character_select_p1 != 255;
+					status.character = left_side_selected ? character_select_p1 : character_select_p2;
+				}
+			}
+			else
+			{
+				status.state = "Character Select";
+			}
+			
+		}
+		else
+		{
+			status.state = "Waiting";
+			status.details = "";
+			status.character = -1;
+		}
+
 		status.gameMode = -1;
-		status.character = -1;
 		status.stage = -1;
 		status.startTime = 0;
 	}
@@ -233,7 +261,7 @@ void TekkenDiscord::FetchAndUpdateDiscordStatus()
 		{
 			// Change Character Icon based on player side information.
 			TekkenOverlayCommon::DataAccess::ObjectProxy<bool> are_sides_reversed_online{ baseAddress + 0x34DF554 };
-			TekkenOverlayCommon::DataAccess::ObjectProxy<int> local_player_side{ baseAddress + 0x344788C };
+			TekkenOverlayCommon::DataAccess::ObjectProxy<bool> is_player_right_side{ baseAddress + 0x344788C };
 			TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p1{ baseAddress , 0x34DF630 , 0xD8 };
 			TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p2{ baseAddress , 0x34DF628 , 0xD8 };
 			TekkenOverlayCommon::DataAccess::ObjectProxy<int> player_char;
@@ -241,17 +269,17 @@ void TekkenDiscord::FetchAndUpdateDiscordStatus()
 			// If we're playing online we need to check if sides have been reversed.
 			if (game_mode != 4)
 			{
-				player_char = local_player_side == 0 ? char_p1 : char_p2;
+				player_char = !is_player_right_side ? char_p1 : char_p2;
 			}
 			else
 			{
 				if (are_sides_reversed_online)
 				{
-					player_char = local_player_side == 0 ? char_p2 : char_p1;
+					player_char = !is_player_right_side ? char_p2 : char_p1;
 				}
 				else
 				{
-					player_char = local_player_side == 0 ? char_p1 : char_p2;
+					player_char = !is_player_right_side ? char_p1 : char_p2;
 				}
 				
 			}
@@ -359,23 +387,6 @@ bool TekkenDiscord::CanReadGameMode()
 	return true;
 }
 
-int TekkenDiscord::GetLocalPlayerCharacter(bool isSideReversed)
-{
-	uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(nullptr);
-	TekkenOverlayCommon::DataAccess::ObjectProxy<int> game_mode{ baseAddress, 0x379B158, 0x8, 0x8, 0x0 , 0x470 , 0x10 };
-	TekkenOverlayCommon::DataAccess::ObjectProxy<int> local_player_side{ baseAddress + 0x344788C };
-	TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p1{ baseAddress , 0x34DF630 , 0xD8 };
-	TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p2{ baseAddress , 0x34DF628 , 0xD8 };
-
-	if (isSideReversed)
-	{
-		return local_player_side == 0 ? char_p2 : char_p1;
-	}
-	else
-	{
-		return local_player_side == 0 ? char_p1 : char_p2;
-	}
-}
 
 void TekkenDiscord::DrawImGui()
 {
