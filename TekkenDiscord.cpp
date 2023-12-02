@@ -183,8 +183,6 @@ void TekkenDiscord::DX11Present(ID3D11Device* pDevice, ID3D11DeviceContext* pCon
 void TekkenDiscord::FetchAndUpdateDiscordStatus()
 {
 	uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(nullptr);
-
-	// Is in game
 	TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_pointer_p1{ baseAddress, 0x34DF630, 0x218, 0x0 };
 	if (!CanReadGameMode())
 	{
@@ -222,7 +220,7 @@ void TekkenDiscord::FetchAndUpdateDiscordStatus()
 
 		status.details = tekkenGameStates[game_state].c_str();
 
-		// Versus mode we dont need any of the specific character information.
+		// Versus mode we don't need any of the specific character information.
 		if (game_mode == 6)
 		{
 			if (game_state == 4)
@@ -234,27 +232,28 @@ void TekkenDiscord::FetchAndUpdateDiscordStatus()
 		else
 		{
 			// Change Character Icon based on player side information.
-			TekkenOverlayCommon::DataAccess::ObjectProxy<int> is_online_player_side_reversed{ baseAddress + 0x34DF554 };
+			TekkenOverlayCommon::DataAccess::ObjectProxy<bool> are_sides_reversed_online{ baseAddress + 0x34DF554 };
 			TekkenOverlayCommon::DataAccess::ObjectProxy<int> local_player_side{ baseAddress + 0x344788C };
 			TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p1{ baseAddress , 0x34DF630 , 0xD8 };
 			TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p2{ baseAddress , 0x34DF628 , 0xD8 };
 			TekkenOverlayCommon::DataAccess::ObjectProxy<int> player_char;
 
 			// If we're playing online we need to check if sides have been reversed.
-			if (game_mode == 4)
+			if (game_mode != 4)
 			{
-				if (is_online_player_side_reversed == 0)
-				{
-					player_char = local_player_side == 0 ? char_p1 : char_p2;
-				}
-				else
-				{
-					player_char = local_player_side == 0 ? char_p2 : char_p1;
-				}
+				player_char = local_player_side == 0 ? char_p1 : char_p2;
 			}
 			else
 			{
-				player_char = local_player_side == 0 ? char_p1 : char_p2;
+				if (are_sides_reversed_online)
+				{
+					player_char = local_player_side == 0 ? char_p2 : char_p1;
+				}
+				else
+				{
+					player_char = local_player_side == 0 ? char_p1 : char_p2;
+				}
+				
 			}
 
 			status.character = player_char;
@@ -341,20 +340,41 @@ void TekkenDiscord::OnModMenuButtonPressed()
 bool TekkenDiscord::CanReadGameMode()
 {
 	uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(nullptr);
-	TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_pointer_p1{ baseAddress, 0x34DF630, 0x218, 0x0 };
-	if (!move_pointer_p1.IsValid() || move_pointer_p1 == 0 || move_pointer_p1 == -1)
-	{
-		return false;
-	}
+	int playerOffset[2] = { 0x34DF630, 0x34DF628};
+	for (int i = 0; i < 2; i++) {
 
-	TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_anim_pointer_p1{ baseAddress, 0x34DF630, 0x218, 0x10, 0x0 };
-	if (!move_anim_pointer_p1.IsValid() || move_anim_pointer_p1 == 0 || move_anim_pointer_p1 == -1)
-	{
-		return false;
+		TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_pointer{ baseAddress,  playerOffset[i], 0x218, 0x0 };
+		if (!move_pointer.IsValid() || move_pointer == 0 || move_pointer == -1)
+		{
+			return false;
+		}
+
+		TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_anim_pointer{ baseAddress, playerOffset[i], 0x218, 0x10, 0x0 };
+		if (!move_anim_pointer.IsValid() || move_anim_pointer == 0 || move_anim_pointer == -1)
+		{
+			return false;
+		}
 	}
 
 	return true;
-	
+}
+
+int TekkenDiscord::GetLocalPlayerCharacter(bool isSideReversed)
+{
+	uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(nullptr);
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> game_mode{ baseAddress, 0x379B158, 0x8, 0x8, 0x0 , 0x470 , 0x10 };
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> local_player_side{ baseAddress + 0x344788C };
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p1{ baseAddress , 0x34DF630 , 0xD8 };
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p2{ baseAddress , 0x34DF628 , 0xD8 };
+
+	if (isSideReversed)
+	{
+		return local_player_side == 0 ? char_p2 : char_p1;
+	}
+	else
+	{
+		return local_player_side == 0 ? char_p1 : char_p2;
+	}
 }
 
 void TekkenDiscord::DrawImGui()

@@ -31,6 +31,7 @@ std::map<int, std::string> tekkendiscord::InitGameModes()
 
 	gameModes[0] = "Training Mode";
 	gameModes[1] = "Arcade Mode";
+	gameModes[2] = "Attract Mode";
 	gameModes[5] = "Story Mode";
 	gameModes[4] = "Online Match";
 	gameModes[6] = "Versus Mode";
@@ -43,6 +44,7 @@ std::map<int, std::string> tekkendiscord::InitGameModes()
 
 	return gameModes;
 }
+
 
 std::map<int, std::string> tekkendiscord::InitGameStates()
 {

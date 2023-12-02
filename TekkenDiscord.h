@@ -41,6 +41,8 @@ public:
 
 	virtual bool CanReadGameMode();
 
+	virtual int GetLocalPlayerCharacter(bool isSideReversed);
+
 	//Call ImGui Here (CALLED EVERY FRAME ON DX HOOK)
 	virtual void DrawImGui() override;
 

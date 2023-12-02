@@ -18,7 +18,126 @@ namespace tekkendiscord
 		constexpr uintptr_t player_side = 0x4;
 	}
 
-	enum TekkenDiscordTimerState { passive, enable, disable };
+	enum TekkenCharacter 
+	{
+		Paul,
+		Law,
+		King,
+		Yoshimitsu,
+		Hwoarang,
+		Xiaoyu,
+		Jin,
+		Bryan,
+		Heihachi,
+		Kazyua,
+		Steve,
+		Jack7,
+		Asuka,
+		DevilJin,
+		Feng,
+		Lili,
+		Dragunov,
+		Leo,
+		Lars,
+		Alisa,
+		Claudio,
+		Katarina,
+		LuckyChloe,
+		Shaheen,
+		Josie,
+		Gigas,
+		Kazumi,
+		DevilKazumi,
+		Nina,
+		MasterRaven,
+		Lee,
+		Bob,
+		Akuma,
+		Kuma,
+		Panda,
+		Eddy,
+		Eliza,
+		Miguel,
+		TekkenForceGrunt,
+		YoungKazuya,
+		Jack4,
+		YoungHeihachi,
+		Dummy,
+		Geese,
+		Noctis,
+		Anna,
+		Lei,
+		ArmorKing,
+		Marduk,
+		Julia,
+		Negan,
+		Zafina,
+		Ganryu,
+		Leroy,
+		Fahkumram,
+		Kunimitsu,
+		Lidia
+	};
+
+	enum TekkenGameMode
+	{
+		Training,
+		Arcade,
+		Attract,
+		Online = 4,
+		Story,
+		Versus,
+		Customization,
+		CharacterStory,
+		TreasureBattle = 11,
+		OnlineTraining = 15,
+		UltimateTekkenBowl = 17,
+	};
+
+	enum TekkenGameState
+	{
+		Player1Intro,
+		Player2Intro,
+		RoundStart = 3,
+		InProgress,
+		RoundEnd,
+		MatchEnd = 8,
+		InTraining = 21,
+		InDemonStration
+	};
+
+	enum TekkenStage
+	{
+		MishimaDojo,
+		ForgottenRealm,
+		Jungle,
+		Arctic,
+		Twlight,
+		DragonNest,
+		Souq,
+		DevilPit,
+		MishimaBuilding,
+		AbandonedTemple,
+		DuomoDiSirio = 30,
+		Arena,
+		Helipad,
+		HelipadNight,
+		Brimstone = 35,
+		Precipice,
+		VioletSystem,
+		KinderGym = 39,
+		InfiniteAzure,
+		GeometricPlane,
+		HowardEstate = 51,
+		HammerHead,
+		Jungle2,
+		Twilight2,
+		InfiniteAzure2,
+		LastDay,
+		CaveOfEnlightenment,
+		VermillionGates,
+		IslandParadise
+	};
 
 	struct TekkenStatus
 	{
@@ -31,8 +150,9 @@ namespace tekkendiscord
 		int gameMode;
 		int currentGameState;
 
-		int character = -1;
-		int stage = -1;
+		int character;
+		int opponentCharacter;
+		int stage;
 
 		bool isGameRunning;
 		bool isTimedState;
