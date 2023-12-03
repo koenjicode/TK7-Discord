@@ -141,16 +141,22 @@ namespace tekkendiscord
 
 	struct TekkenStatus
 	{
+		// Discord related information.
+
 		char const* details;
 		char const* state;
 
 		char const* largeText;
 		char const* smallText;
 
+		// Tekken information
+
 		int gameMode;
 		int currentGameState;
 
+		
 		bool timerEnabled;
+		bool side_snapshot_taken;
 
 		int character;
 		int opponentCharacter;

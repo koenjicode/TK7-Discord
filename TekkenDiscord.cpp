@@ -71,6 +71,8 @@ static std::string const tekkenCharacters[] = {
 	"Lidia",
 };
 
+std::string versionNumber = "v2.0.0";
+
 bool runDiscordPlugin;
 
 template<typename ... Args>
@@ -171,8 +173,10 @@ void TekkenDiscord::DX11Present(ID3D11Device* pDevice, ID3D11DeviceContext* pCon
 			}
 			else
 			{
-				activity.GetAssets().SetLargeImage("fallback");
-				activity.GetAssets().SetLargeText("All Fights are Personal");
+				activity.GetAssets().SetLargeImage("fallback2");
+
+				std::string text = string_format("T7Discord %s", versionNumber);
+				activity.GetAssets().SetLargeText(text.c_str());
 			}
 			
 			activity.GetTimestamps().SetStart(status.startTime);
@@ -194,8 +198,6 @@ void TekkenDiscord::DX11Present(ID3D11Device* pDevice, ID3D11DeviceContext* pCon
 void TekkenDiscord::FetchAndUpdateDiscordStatus()
 {
 	uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(nullptr);
-
-	TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_pointer_p1{ baseAddress, 0x34DF630, 0x218, 0x0 };
 	if (CanReadGameMode())
 	{
 		UpdateInGame(baseAddress);
@@ -214,6 +216,7 @@ void TekkenDiscord::UpdateInGame(uintptr_t baseAddress)
 		status.startTime = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 		status.timerEnabled = true;
 	}
+
 	// Ensure that the game mode is valid.
 	TekkenOverlayCommon::DataAccess::ObjectProxy<int> game_mode{ baseAddress, 0x379B158, 0x8, 0x8, 0x0 , 0x470 , 0x10 };
 	if (!game_mode.IsValid() || !tekkenGameModes.count(game_mode))
@@ -243,9 +246,16 @@ void TekkenDiscord::UpdateInGame(uintptr_t baseAddress)
 	{
 		
 		// If the game mode is non-round important game mode we don't show the round.
-		if (game_mode == 0 || game_mode == 5)
+		if (game_mode == 0 || game_mode == 5 || game_mode == 15)
 		{
-			status.details = tekkenGameStates[game_state].c_str();
+			if (game_mode == 15)
+			{
+				status.details = "Searching For Opponent";
+			}
+			else
+			{
+				status.details = tekkenGameStates[game_state].c_str();
+			}
 		}
 		else
 		{
@@ -253,7 +263,8 @@ void TekkenDiscord::UpdateInGame(uintptr_t baseAddress)
 			TekkenOverlayCommon::DataAccess::ObjectProxy<int> round_count{ baseAddress + 0x34CD6E0 };
 			if (round_count > 0)
 			{
-				status.details = string_format("Round %d: s%", round_count, tekkenGameStates[game_state]).c_str();
+				std::string text = string_format("Round %s: %s", std::to_string(round_count), tekkenGameStates[game_state]);
+				status.details = text.c_str();
 			}
 			else
 			{
@@ -261,42 +272,47 @@ void TekkenDiscord::UpdateInGame(uintptr_t baseAddress)
 			}
 		}
 
-		// Versus mode we don't need any of the specific character information.
-		if (IsMultiplePlayerGameMode())
+		// We only grab side information once to prevent issues, every single time waiting gets called we reset it.
+		if (!status.side_snapshot_taken)
 		{
-			status.character = -1;
-		}
-		else
-		{
-			// Change Character Icon based on player side information.
-			TekkenOverlayCommon::DataAccess::ObjectProxy<bool> are_sides_reversed_online{ baseAddress + 0x34DF554 };
-			TekkenOverlayCommon::DataAccess::ObjectProxy<bool> is_player_right_side{ baseAddress + 0x344788C };
-			TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p1{ baseAddress , 0x34DF630 , 0xD8 };
-			TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p2{ baseAddress , 0x34DF628 , 0xD8 };
-			TekkenOverlayCommon::DataAccess::ObjectProxy<int> player_char;
-
-			// If we're playing online we need to check if sides have been reversed.
-			if (game_mode != 4)
+			// Versus mode we don't need any of the specific character information.
+			if (IsMultiplePlayerGameMode())
 			{
-				player_char = !is_player_right_side ? char_p1 : char_p2;
+				status.character = -1;
 			}
 			else
 			{
-				if (are_sides_reversed_online)
-				{
-					player_char = !is_player_right_side ? char_p2 : char_p1;
-				}
-				else
+				// Change Character Icon based on player side information.
+				TekkenOverlayCommon::DataAccess::ObjectProxy<bool> are_sides_reversed_online{ baseAddress + 0x34DF554 };
+				TekkenOverlayCommon::DataAccess::ObjectProxy<bool> is_player_right_side{ baseAddress + 0x344788C };
+				TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p1{ baseAddress , 0x34DF630 , 0xD8 };
+				TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p2{ baseAddress , 0x34DF628 , 0xD8 };
+				TekkenOverlayCommon::DataAccess::ObjectProxy<int> player_char;
+
+				// If we're playing online we need to check if sides have been reversed.
+				if (game_mode != 4)
 				{
 					player_char = !is_player_right_side ? char_p1 : char_p2;
 				}
+				else
+				{
+					if (are_sides_reversed_online)
+					{
+						player_char = !is_player_right_side ? char_p2 : char_p1;
+					}
+					else
+					{
+						player_char = !is_player_right_side ? char_p1 : char_p2;
+					}
 
+				}
+
+				status.character = player_char;
 			}
 
-			status.character = player_char;
+			status.character_saved = status.character;
+			status.side_snapshot_taken = true;
 		}
-
-		status.character_saved = status.character;
 	}
 
 	// Change Stage Icon based on stage information.
@@ -396,6 +412,7 @@ void TekkenDiscord::UpdateFallback()
 	status.gameMode = -1;
 	status.startTime = 0;
 	status.timerEnabled = false;
+	status.side_snapshot_taken = false;
 }
 
 void TekkenDiscord::OnModMenuButtonPressed()
@@ -418,6 +435,10 @@ void TekkenDiscord::OnModMenuButtonPressed()
 
 	Log::Print("Printing Epoch Time");
 	Log::Print(std::to_string(status.startTime));
+
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> round_count{ baseAddress + 0x34CD6E0 };
+	Log::Print("Round Count");
+	Log::Print(std::to_string(round_count));
 	
 	
 	Log::Print("Printing Current Stage ID");
