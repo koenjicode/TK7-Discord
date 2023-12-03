@@ -150,6 +150,8 @@ namespace tekkendiscord
 		int gameMode;
 		int currentGameState;
 
+		bool timerEnabled;
+
 		int character;
 		int opponentCharacter;
 		int stage;
