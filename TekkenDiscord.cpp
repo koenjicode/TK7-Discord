@@ -11,6 +11,7 @@ constexpr static int64_t applicationID = 1178519907953021148;
 static std::map<int, std::string> tekkenStages;
 static std::map<int, std::string> tekkenGameModes;
 static std::map<int, std::string> tekkenGameStates;
+static std::map<int, std::string> tekkenGameMenus;
 static std::string const tekkenCharacters[] = {
 	"Paul",
 	"Law",
@@ -96,6 +97,7 @@ void TekkenDiscord::InitializeMod()
 	tekkenStages = tekkendiscord::InitStageMap();
 	tekkenGameStates = tekkendiscord::InitGameStates();
 	tekkenGameModes = tekkendiscord::InitGameModes();
+	tekkenGameMenus = tekkendiscord::InitGameMenus();
 
 	auto result = discord::Core::Create(applicationID, DiscordCreateFlags_Default, &core);
 	if (result == discord::Result::Ok)
@@ -196,29 +198,48 @@ void TekkenDiscord::FetchAndUpdateDiscordStatus()
 				if (character_select_p1 == 255 && character_select_p2 == 255)
 				{
 					status.state = "Side Select";
+					status.side_saved = -1;
 				}
 				else
 				{
+					
+					// We save the player side the first time the player backs into the character select.
+					// This is done to fix my P2 glitch in this code.
+					if (status.side_saved < 0)
+					{
+						status.side_saved = character_select_p1 != 255 ? 0 : 1;
+					}
+					
 					status.state = "Character Select";
-					bool left_side_selected = character_select_p1 != 255;
-					status.character = left_side_selected ? character_select_p1 : character_select_p2;
+					status.character = status.side_saved == 0 ? character_select_p1 : character_select_p2;
 				}
 			}
 			else
 			{
+				status.side_saved = -1;
 				status.state = "Character Select";
 			}
-			
+
+			status.details = tekkenGameMenus[menu_selected].c_str();
 		}
 		else
 		{
-			status.state = "Waiting";
-			status.details = "";
-			status.character = -1;
+			TekkenOverlayCommon::DataAccess::ObjectProxy<int> stage_select{ baseAddress,  0x034D6918, 0x188 };
+			if (stage_select.IsValid())
+			{
+				status.state = "Stage Select";
+				status.stage = stage_select;
+			}
+			else
+			{
+				status.state = "Waiting";
+				status.details = "";
+				status.character = -1;
+				status.stage = -1;
+			}
 		}
 
 		status.gameMode = -1;
-		status.stage = -1;
 		status.startTime = 0;
 	}
 	else
@@ -236,7 +257,16 @@ void TekkenDiscord::FetchAndUpdateDiscordStatus()
 			return;
 		}
 
-		status.state = tekkenGameModes[game_mode].c_str();
+		// If the player is watching a replay display the replay text instead of the game mode.
+		TekkenOverlayCommon::DataAccess::ObjectProxy<int> menu_selected{ baseAddress,  0x34D5B50 };
+		if (menu_selected == 8)
+		{
+			status.state = "Watching Replay";
+		}
+		else
+		{
+			status.state = tekkenGameModes[game_mode].c_str();
+		}
 
 		TekkenOverlayCommon::DataAccess::ObjectProxy<int> game_state{ baseAddress + 0x34CD4F4 };
 		if (!tekkenGameStates.count(game_state))
@@ -246,16 +276,23 @@ void TekkenDiscord::FetchAndUpdateDiscordStatus()
 			return;
 		}
 
-		status.details = tekkenGameStates[game_state].c_str();
+		TekkenOverlayCommon::DataAccess::ObjectProxy<int> round_count{ baseAddress + 0x34CD6E0 };
+		std::string stateText;
+
+		if (game_mode != 0 && game_mode != 5 && round_count > 0)
+		{
+			stateText.append("Round ");
+			stateText.append(std::to_string(round_count));
+			stateText.append(": ");
+		}
+
+		stateText.append(tekkenGameStates[game_state].c_str());
+		status.details = stateText.c_str();
 
 		// Versus mode we don't need any of the specific character information.
-		if (game_mode == 6)
+		if (IsMultiplePlayerGameMode())
 		{
-			if (game_state == 4)
-			{
-				// TODO: Update this to show VS Player information.
-				// status.details = tekkenGameStates[game_state].c_str();
-			}
+			status.character = -1;
 		}
 		else
 		{
@@ -292,7 +329,6 @@ void TekkenDiscord::FetchAndUpdateDiscordStatus()
 		status.stage = stage_id;
 
 		// Activate timer in correct match conditions.
-		TekkenOverlayCommon::DataAccess::ObjectProxy<int> round_count{ baseAddress + 0x34CD6E0 };
 		if (round_count < 2)
 		{
 			if (game_state == 4 || game_state == 21 || game_state == 22)
@@ -385,6 +421,13 @@ bool TekkenDiscord::CanReadGameMode()
 	}
 
 	return true;
+}
+
+bool TekkenDiscord::IsMultiplePlayerGameMode()
+{
+	uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(nullptr);
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> game_mode{ baseAddress, 0x379B158, 0x8, 0x8, 0x0 , 0x470 , 0x10 };
+	return game_mode == 6 || game_mode == 2;
 }
 
 

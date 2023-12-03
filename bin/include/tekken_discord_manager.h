@@ -149,6 +149,7 @@ namespace tekkendiscord
 
 		int gameMode;
 		int currentGameState;
+		int side_saved;
 
 		int character;
 		int opponentCharacter;
@@ -160,13 +161,11 @@ namespace tekkendiscord
 		long startTime;
 	};
 
+	std::map<int, std::string> InitGameMenus();
+
 	std::map<int, std::string> InitGameModes();
 
 	std::map<int, std::string> InitGameStates();
 
 	std::map<int, std::string> InitStageMap();
-
-
-
-	TekkenStatus FetchTekkenStatus();
 }

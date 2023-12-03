@@ -41,6 +41,8 @@ public:
 
 	virtual bool CanReadGameMode();
 
+	virtual bool IsMultiplePlayerGameMode();
+
 	//Call ImGui Here (CALLED EVERY FRAME ON DX HOOK)
 	virtual void DrawImGui() override;
 

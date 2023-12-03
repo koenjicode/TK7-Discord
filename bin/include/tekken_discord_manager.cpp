@@ -1,29 +1,34 @@
 #include "tekken_discord_manager.h"
 
-tekkendiscord::TekkenStatus tekkendiscord::FetchTekkenStatus()
+
+std::map<int, std::string> tekkendiscord::InitGameMenus()
 {
-	tekkendiscord::TekkenStatus tekkenStatus{};
+	std::map<int, std::string> gameMenus;
 
-	// TODO: Is in game.
-	if (true)
-	{
-		tekkenStatus.state = "Game Mode"; // Should be the game mode.
-		tekkenStatus.details = "Match State"; // Should be the state of the game.
+	gameMenus[1] = "Story Mode";
+	gameMenus[2] = "Online Mode";
+	gameMenus[3] = "Arcade Mode";
+	gameMenus[4] = "Treasure Battle";
+	gameMenus[5] = "Versus Mode";
+	gameMenus[6] = "Practice Mode";
+	gameMenus[8] = "My Replay & Tips";
+	gameMenus[9] = "Character Customization";
+	gameMenus[10] = "Player Customization";
+	gameMenus[12] = "Gallery";
+	gameMenus[13] = "Game Options"; // Game
+	gameMenus[14] = "Game Options"; // Sound
+	gameMenus[15] = "Game Options"; // Display
+	gameMenus[16] = "Game Options"; // Graphics
+	gameMenus[17] = "Game Options"; // Game Controller
+	gameMenus[18] = "Game Options"; // Device Controller
+	gameMenus[19] = "Copyright";
+	gameMenus[20] = "Credits";
+	gameMenus[21] = "Player Information";
+	gameMenus[22] = "Store";
+	gameMenus[28] = "Ultimate Tekken Bowl";
 
-		tekkenStatus.character = 0; // Character ID based on global side variable.
-		tekkenStatus.stage = 0; // Stage should be filtered correctly.
-	}
-
-	 //TODO: Is game paused.
-	if (false)
-	{
-		tekkenStatus.details = "Game Paused";
-	}
-
-	return tekkenStatus;
+	return gameMenus;
 }
-
-
 
 std::map<int, std::string> tekkendiscord::InitGameModes()
 {
@@ -38,7 +43,7 @@ std::map<int, std::string> tekkendiscord::InitGameModes()
 	gameModes[7] = "Customization Mode";
 	gameModes[8] = "Character Story";
 	gameModes[11] = "Treasure Battle";
-	gameModes[15] = "Online Training Mode";
+	gameModes[15] = "Training Mode"; // Online
 	gameModes[17] = "Ultimate Tekken Bowl";
 
 
