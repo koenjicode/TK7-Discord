@@ -1,6 +1,7 @@
 #pragma once
 #include "Mod/Mod.h"
 #include <tekken_discord_manager.h>
+#include <ObjectProxy.h>
 
 class TekkenDiscord : public Mod
 {
@@ -40,6 +41,10 @@ public:
 	void UpdateInGame(uintptr_t baseAddress);
 
 	void UpdateOutGame(uintptr_t baseAddress);
+
+	void UpdateStageSelect(uintptr_t baseAddress);
+
+	void UpdateCharacterSelect(uintptr_t baseAddress, TekkenOverlayCommon::DataAccess::ObjectProxy<int> character_select_p1, TekkenOverlayCommon::DataAccess::ObjectProxy<int> character_select_p2);
 
 	void UpdateFallback();
 

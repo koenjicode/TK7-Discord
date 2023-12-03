@@ -271,6 +271,7 @@ void TekkenDiscord::UpdateInGame(uintptr_t baseAddress)
 		}
 
 		status.character = player_char;
+		status.character_saved = status.character;
 	}
 
 	// Change Stage Icon based on stage information.
