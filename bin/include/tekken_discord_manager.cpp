@@ -55,8 +55,8 @@ std::map<int, std::string> tekkendiscord::InitGameStates()
 {
 	std::map<int, std::string> gameStates;
 
-	gameStates[0] = "Introduction"; // For Player 1
-	gameStates[1] = "Introduction"; // For Player 2
+	gameStates[0] = "Match Start"; // For Player 1
+	gameStates[1] = "Match Start"; // For Player 2
 	gameStates[3] = "Round Start";
 	gameStates[4] = "In-Battle";
 	gameStates[5] = "Round End";
@@ -92,6 +92,7 @@ std::map<int, std::string> tekkendiscord::InitStageMap()
 	stages[39] = "Kinder Gym";
 	stages[40] = "Infinite Azure";
 	stages[41] = "Geometric Plane";
+	stages[42] = "Warm-Up Space";
 	stages[51] = "Howard Estate";
 	stages[52] = "Hammerhead";
 	stages[53] = "Jungle Outpost 2";
