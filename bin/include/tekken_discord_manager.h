@@ -149,11 +149,13 @@ namespace tekkendiscord
 
 		int gameMode;
 		int currentGameState;
-		int side_saved;
 
 		int character;
 		int opponentCharacter;
 		int stage;
+
+		int side_saved;
+		int character_saved;
 
 		bool isGameRunning;
 		bool isTimedState;

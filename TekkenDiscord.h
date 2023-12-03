@@ -37,6 +37,12 @@ public:
 
 	virtual void FetchAndUpdateDiscordStatus();
 
+	void UpdateInGame(uintptr_t baseAddress);
+
+	void UpdateOutGame(uintptr_t baseAddress);
+
+	void UpdateFallback();
+
 	virtual void OnModMenuButtonPressed() override;
 
 	virtual bool CanReadGameMode();
