@@ -365,13 +365,25 @@ void TekkenDiscord::UpdateCharacterSelect(uintptr_t baseAddress, TekkenOverlayCo
 
 void TekkenDiscord::UpdateStageSelect(uintptr_t baseAddress)
 {
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> menu_selected{ baseAddress,  0x34D5B50 };
+
 	TekkenOverlayCommon::DataAccess::ObjectProxy<int> stage_select{ baseAddress,  0x034D6918, 0x188 };
 	if (stage_select.IsValid())
 	{
 		status.state = "Stage Select";
-		status.details = "";
+		status.details = tekkenGameMenus[menu_selected].c_str();
 		status.stage = stage_select;
-		status.character = status.character_saved;
+		
+		// Don't show a character if we're in versus mode.	
+		if (menu_selected != 5)
+		{
+			status.character = status.character_saved;
+		}
+		else
+		{
+			status.character = -1;
+		}
+		
 	}
 }
 
