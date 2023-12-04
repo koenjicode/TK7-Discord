@@ -38,7 +38,7 @@ public:
 
 	virtual void FetchAndUpdateDiscordStatus();
 
-	void CheckIfLobbyValid(uintptr_t baseAddress);
+	void UpdateLobbyInformation(uintptr_t baseAddress);
 
 	void UpdateInGame(uintptr_t baseAddress);
 

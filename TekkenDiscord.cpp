@@ -71,7 +71,7 @@ static std::string const tekkenCharacters[] = {
 	"Lidia",
 };
 
-std::string versionNumber = "v2.0.0";
+std::string versionNumber = "v2.1.0";
 
 bool runDiscordPlugin;
 
@@ -201,7 +201,7 @@ void TekkenDiscord::DX11Present(ID3D11Device* pDevice, ID3D11DeviceContext* pCon
 void TekkenDiscord::FetchAndUpdateDiscordStatus()
 {
 	uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(nullptr);
-	CheckIfLobbyValid(baseAddress);
+	UpdateLobbyInformation(baseAddress);
 
 	if (IsInMatch())
 	{
@@ -240,11 +240,11 @@ void TekkenDiscord::UpdateInGame(uintptr_t baseAddress)
 	{
 		if (status.lobby_valid)
 		{
-			status.state = tekkenGameModes[game_mode].c_str();
+			status.state = "Player Match";
 		}
 		else
 		{
-			status.state = "Player Match";
+			status.state = tekkenGameModes[game_mode].c_str();
 		}
 		
 	}
@@ -359,11 +359,11 @@ void TekkenDiscord::UpdateCharacterSelect(uintptr_t baseAddress, TekkenOverlayCo
 
 	if (status.lobby_valid)
 	{
-		status.details = "Player Match";
+		status.state = "Player Match";
 	}
 	else
 	{
-		status.details = tekkenGameMenus[menu_selected].c_str();
+		status.state = tekkenGameMenus[menu_selected].c_str();
 	}
 
 	
@@ -371,7 +371,7 @@ void TekkenDiscord::UpdateCharacterSelect(uintptr_t baseAddress, TekkenOverlayCo
 	// Versus mode puts us straight into the Character Select, plus two people are controlling this method, so different rules.
 	if (menu_selected == 5)
 	{
-		status.state = "Character Select";
+		status.details = "Character Select";
 		status.side_saved = -1;
 	}
 	else
@@ -380,7 +380,7 @@ void TekkenDiscord::UpdateCharacterSelect(uintptr_t baseAddress, TekkenOverlayCo
 		// If both values are 255, then we're selecting a side.
 		if (character_select_p1 == 255 && character_select_p2 == 255)
 		{
-			status.state = "Side Select";
+			status.details = "Side Select";
 			status.side_saved = -1;
 		}
 		else
@@ -392,7 +392,7 @@ void TekkenDiscord::UpdateCharacterSelect(uintptr_t baseAddress, TekkenOverlayCo
 				status.side_saved = character_select_p1 != 255 ? 0 : 1;
 			}
 
-			status.state = "Character Select";
+			status.details = "Character Select";
 			status.character = status.side_saved == 0 ? character_select_p1 : character_select_p2;
 
 			// We save the character for any information that needs it.
@@ -408,14 +408,14 @@ void TekkenDiscord::UpdateStageSelect(uintptr_t baseAddress)
 	TekkenOverlayCommon::DataAccess::ObjectProxy<int> stage_select{ baseAddress,  0x034D6918, 0x188 };
 	if (stage_select.IsValid())
 	{
-		status.state = "Stage Select";
+		status.details = "Stage Select";
 		if (status.lobby_valid)
 		{
-			status.details = "Player Match";
+			status.state = "Player Match";
 		}
 		else
 		{
-			status.details = tekkenGameMenus[menu_selected].c_str();
+			status.state = tekkenGameMenus[menu_selected].c_str();
 		}
 
 		status.stage = stage_select;
@@ -435,8 +435,16 @@ void TekkenDiscord::UpdateStageSelect(uintptr_t baseAddress)
 
 void TekkenDiscord::UpdateFallback()
 {
-	status.state = "Waiting";
-	status.details = "";
+	if (status.lobby_valid)
+	{
+		status.state = "Player Match";
+	}
+	else
+	{
+		status.state = "";
+	}
+
+	status.details = "Waiting";
 	status.character = -1;
 	status.stage = -1;
 	status.gameMode = -1;
@@ -445,7 +453,7 @@ void TekkenDiscord::UpdateFallback()
 	status.side_snapshot_taken = false;
 }
 
-void TekkenDiscord::CheckIfLobbyValid(uintptr_t baseAddress)
+void TekkenDiscord::UpdateLobbyInformation(uintptr_t baseAddress)
 {
 	int base_lobby_offset = 0x510;
 	TekkenOverlayCommon::DataAccess::ObjectProxy<int> lobby_size{ baseAddress,  0x034D6898, base_lobby_offset };
@@ -456,11 +464,15 @@ void TekkenDiscord::CheckIfLobbyValid(uintptr_t baseAddress)
 
 		status.partySize = current_players;
 		status.partyMax = lobby_size;
+
+		status.lobby_valid = true;
 	}
 	else
 	{
 		status.partySize = 0;
 		status.partyMax = 0;
+
+		status.lobby_valid = false;
 	}
 }
 
