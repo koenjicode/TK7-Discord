@@ -152,6 +152,9 @@ void TekkenDiscord::DX11Present(ID3D11Device* pDevice, ID3D11DeviceContext* pCon
 			activity.SetState(status.state);
 			activity.SetDetails(status.details);
 
+			activity.GetParty().GetSize().SetCurrentSize(status.partySize);
+			activity.GetParty().GetSize().SetMaxSize(status.partyMax);
+
 			if (status.character > -1)
 			{
 				std::string s;
@@ -198,7 +201,9 @@ void TekkenDiscord::DX11Present(ID3D11Device* pDevice, ID3D11DeviceContext* pCon
 void TekkenDiscord::FetchAndUpdateDiscordStatus()
 {
 	uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(nullptr);
-	if (CanReadGameMode())
+	CheckIfLobbyValid(baseAddress);
+
+	if (IsInMatch())
 	{
 		UpdateInGame(baseAddress);
 	}
@@ -233,7 +238,15 @@ void TekkenDiscord::UpdateInGame(uintptr_t baseAddress)
 	}
 	else
 	{
-		status.state = tekkenGameModes[game_mode].c_str();
+		if (status.lobby_valid)
+		{
+			status.state = tekkenGameModes[game_mode].c_str();
+		}
+		else
+		{
+			status.state = "Player Match";
+		}
+		
 	}
 
 	// If Unknown Game Mode: Save to assume that we're waiting for something. So we'll just say waiting.
@@ -344,7 +357,16 @@ void TekkenDiscord::UpdateCharacterSelect(uintptr_t baseAddress, TekkenOverlayCo
 {
 	TekkenOverlayCommon::DataAccess::ObjectProxy<int> menu_selected{ baseAddress,  0x34D5B50 };
 
-	status.details = tekkenGameMenus[menu_selected].c_str();
+	if (status.lobby_valid)
+	{
+		status.details = "Player Match";
+	}
+	else
+	{
+		status.details = tekkenGameMenus[menu_selected].c_str();
+	}
+
+	
 
 	// Versus mode puts us straight into the Character Select, plus two people are controlling this method, so different rules.
 	if (menu_selected == 5)
@@ -387,7 +409,15 @@ void TekkenDiscord::UpdateStageSelect(uintptr_t baseAddress)
 	if (stage_select.IsValid())
 	{
 		status.state = "Stage Select";
-		status.details = tekkenGameMenus[menu_selected].c_str();
+		if (status.lobby_valid)
+		{
+			status.details = "Player Match";
+		}
+		else
+		{
+			status.details = tekkenGameMenus[menu_selected].c_str();
+		}
+
 		status.stage = stage_select;
 		
 		// Don't show a character if we're in versus mode.	
@@ -413,6 +443,25 @@ void TekkenDiscord::UpdateFallback()
 	status.startTime = 0;
 	status.timerEnabled = false;
 	status.side_snapshot_taken = false;
+}
+
+void TekkenDiscord::CheckIfLobbyValid(uintptr_t baseAddress)
+{
+	int base_lobby_offset = 0x510;
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> lobby_size{ baseAddress,  0x034D6898, base_lobby_offset };
+	if (lobby_size.IsValid())
+	{
+		int current_players_offset = base_lobby_offset - 0xC0;
+		TekkenOverlayCommon::DataAccess::ObjectProxy<int> current_players{ baseAddress,  0x034D6898, current_players_offset };
+
+		status.partySize = current_players;
+		status.partyMax = lobby_size;
+	}
+	else
+	{
+		status.partySize = 0;
+		status.partyMax = 0;
+	}
 }
 
 void TekkenDiscord::OnModMenuButtonPressed()
@@ -476,7 +525,7 @@ void TekkenDiscord::OnModMenuButtonPressed()
 
 }
 
-bool TekkenDiscord::CanReadGameMode()
+bool TekkenDiscord::IsInMatch()
 {
 	uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(nullptr);
 	int playerOffset[2] = { 0x34DF630, 0x34DF628};

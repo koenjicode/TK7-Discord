@@ -149,6 +149,9 @@ namespace tekkendiscord
 		char const* largeText;
 		char const* smallText;
 
+		int partySize;
+		int partyMax;
+
 		// Tekken information
 
 		int gameMode;
@@ -157,6 +160,7 @@ namespace tekkendiscord
 		
 		bool timerEnabled;
 		bool side_snapshot_taken;
+		bool lobby_valid;
 
 		int character;
 		int opponentCharacter;

@@ -38,6 +38,8 @@ public:
 
 	virtual void FetchAndUpdateDiscordStatus();
 
+	void CheckIfLobbyValid(uintptr_t baseAddress);
+
 	void UpdateInGame(uintptr_t baseAddress);
 
 	void UpdateOutGame(uintptr_t baseAddress);
@@ -50,7 +52,7 @@ public:
 
 	virtual void OnModMenuButtonPressed() override;
 
-	virtual bool CanReadGameMode();
+	virtual bool IsInMatch();
 
 	virtual bool IsMultiplePlayerGameMode();
 
