@@ -71,7 +71,7 @@ static std::string const tekkenCharacters[] = {
 	"Lidia",
 };
 
-std::string versionNumber = "v2.1.0";
+std::string versionNumber = "v2.2.0";
 
 bool runDiscordPlugin;
 
