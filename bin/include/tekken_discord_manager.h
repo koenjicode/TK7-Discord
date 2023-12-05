@@ -160,6 +160,7 @@ namespace tekkendiscord
 		
 		bool timerEnabled;
 		bool side_snapshot_taken;
+		bool bowling_snapshot;
 		bool lobby_valid;
 
 		int character;

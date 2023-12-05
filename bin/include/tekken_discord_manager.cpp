@@ -44,7 +44,7 @@ std::map<int, std::string> tekkendiscord::InitGameModes()
 	gameModes[8] = "Character Story";
 	gameModes[11] = "Treasure Battle";
 	gameModes[15] = "Online Warm-Up"; // Online
-	gameModes[17] = "Ultimate Tekken Bowl";
+	gameModes[16] = "Ultimate Tekken Bowl";
 
 
 	return gameModes;

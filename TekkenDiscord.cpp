@@ -205,28 +205,59 @@ void TekkenDiscord::FetchAndUpdateDiscordStatus()
 	uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(nullptr);
 	UpdateLobbyInformation(baseAddress);
 
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> game_mode{ baseAddress, 0x379B158, 0x8, 0x8, 0x0 , 0x470 , 0x10 };
+
+	// Check if we're bowling fr fr
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> saved_tekken_bowl_char{ baseAddress, 0x034D55A0, 0x0, 0x0, 0x10 };
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> tekken_bowl_char_instance_id{ baseAddress, 0x034CDFA8, 0x48, 0xE0, 0x28, 0x10, 0xC8, 0x68  };
+	if (game_mode.IsValid() && game_mode == 16 && saved_tekken_bowl_char.IsValid() && tekken_bowl_char_instance_id.IsValid())
+	{
+		if (saved_tekken_bowl_char == tekken_bowl_char_instance_id)
+		{
+			UpdateTekkenBowling(baseAddress);
+			return;
+		}
+	}
 
 	// Check if one character is spawned to begin with, if so we can check a few things.
-	int playerOffset = 0x34DF630;
-	if (IsPlayerSpawned(baseAddress, playerOffset))
+	
+	int p1_offset = 0x34DF630;
+	if (game_mode.IsValid() && game_mode == 7 && IsPlayerSpawned(baseAddress, p1_offset))
 	{
-		// Check if we're in customization.
-		TekkenOverlayCommon::DataAccess::ObjectProxy<int> game_mode{ baseAddress, 0x379B158, 0x8, 0x8, 0x0 , 0x470 , 0x10 };
-		if (game_mode == 7)
-		{
-			UpdateCustomization(baseAddress);
-		}
-		else
-		{
-			if (IsInMatch(baseAddress))
-			{
-				UpdateInGame(baseAddress);
-			}
-			else
-			{
-				UpdateOutGame(baseAddress);
-			}
-		}
+		UpdateCustomization(baseAddress);
+		return;
+	}
+
+
+	if (IsInMatch(baseAddress))
+	{
+		UpdateInGame(baseAddress);
+	}
+	else
+	{
+		
+		UpdateOutGame(baseAddress);
+	}
+}
+
+void TekkenDiscord::UpdateTekkenBowling(uintptr_t baseAddress)
+{
+	StartTimer();
+
+	status.state = "Ultimate Tekken Bowling";
+
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> p2_saved_tekken_bowl_char{ baseAddress, 0x034D55A0, 0x0, 0x8, 0x10 };
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> p2_char_instance_id{ baseAddress, 0x034CDFA8, 0x48, 0xE0, 0x28, 0x10, 0xC8, 0x70 };
+	if (p2_saved_tekken_bowl_char.IsValid() && p2_char_instance_id.IsValid() && p2_char_instance_id == p2_saved_tekken_bowl_char)
+	{
+		status.details = "Bowling Together";
+	}
+	else
+	{
+		status.details = "Bowling Alone";
+
+		TekkenOverlayCommon::DataAccess::ObjectProxy<int> p1_tekken_bowl_char{ baseAddress, 0x034D55A0, 0x0, 0x0, 0x10 };
+		status.character = p1_tekken_bowl_char;
 	}
 }
 
@@ -413,10 +444,27 @@ void TekkenDiscord::UpdateCharacterSelect(uintptr_t baseAddress, TekkenOverlayCo
 
 	
 
-	// Versus mode puts us straight into the Character Select, plus two people are controlling this method, so different rules.
-	if (menu_selected == 5)
+	// Check for special case game modes
+	if (menu_selected == 5 || menu_selected == 28)
 	{
-		status.details = "Character Select";
+		// Check if the game mode is bowling or versus
+		if (menu_selected == 28)
+		{
+			status.details = "Character Select";
+
+			// If they're bowling alone show the character they're selecting.
+			if (character_select_p1 != 255 && character_select_p2 == 255)
+			{
+				status.details = "Character Select";
+				status.character = character_select_p1;
+				status.character_saved = status.character;
+			}
+		}
+		else
+		{
+			status.details = "Character Select";
+		}
+
 		status.side_saved = -1;
 	}
 	else
@@ -499,6 +547,7 @@ void TekkenDiscord::UpdateOutGameFallback()
 {
 	status.timerEnabled = false;
 	status.side_snapshot_taken = false;
+	status.bowling_snapshot = false;
 	status.startTime = 0;
 }
 
@@ -588,7 +637,7 @@ void TekkenDiscord::OnModMenuButtonPressed()
 
 bool TekkenDiscord::IsPlayerSpawned(uintptr_t baseAddress, uintptr_t playerOffset)
 {
-	TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_pointer{ baseAddress,  playerOffset, 0x218, 0x0 };
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_pointer{ baseAddress, playerOffset, 0x218, 0x0 };
 	if (!move_pointer.IsValid() || move_pointer == 0 || move_pointer == -1)
 	{
 		return false;
@@ -606,12 +655,12 @@ bool TekkenDiscord::IsPlayerSpawned(uintptr_t baseAddress, uintptr_t playerOffse
 bool TekkenDiscord::IsInMatch(uintptr_t baseAddress)
 {
 	int playerOffset[2] = { 0x34DF630, 0x34DF628};
-	if (IsPlayerSpawned(baseAddress, playerOffset[0]))
+	if (!IsPlayerSpawned(baseAddress, playerOffset[0]))
 	{
 		return false;
 	}
 
-	if (IsPlayerSpawned(baseAddress, playerOffset[1]))
+	if (!IsPlayerSpawned(baseAddress, playerOffset[1]))
 	{
 		return false;
 	}

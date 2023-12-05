@@ -38,6 +38,8 @@ public:
 
 	virtual void FetchAndUpdateDiscordStatus();
 
+	void UpdateTekkenBowling(uintptr_t baseAddress);
+
 	void UpdateCustomization(uintptr_t baseAddress);
 
 	void UpdateLobbyInformation(uintptr_t baseAddress);
