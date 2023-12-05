@@ -218,13 +218,18 @@ void TekkenDiscord::FetchAndUpdateDiscordStatus()
 	// Check if we're bowling fr fr
 	TekkenOverlayCommon::DataAccess::ObjectProxy<int> saved_tekken_bowl_char{ baseAddress, 0x034D55A0, 0x0, 0x0, 0x10 };
 	TekkenOverlayCommon::DataAccess::ObjectProxy<int> tekken_bowl_char_instance_id{ baseAddress, 0x034CDFA8, 0x48, 0xE0, 0x28, 0x10, 0xC8, 0x68  };
-	if (game_mode.IsValid() && game_mode == 16 && saved_tekken_bowl_char.IsValid() && tekken_bowl_char_instance_id.IsValid())
+	if (!status.bowling_snapshot)
 	{
-		if (saved_tekken_bowl_char == tekken_bowl_char_instance_id)
+		if (game_mode.IsValid() && game_mode == 16 && saved_tekken_bowl_char.IsValid() && tekken_bowl_char_instance_id.IsValid())
 		{
-			UpdateTekkenBowling(baseAddress);
-			return;
+			if (saved_tekken_bowl_char == tekken_bowl_char_instance_id)
+			{
+				UpdateTekkenBowling(baseAddress);
+				return;
+			}
 		}
+
+		status.bowling_snapshot = true;
 	}
 
 	// Check if one character is spawned to begin with, if so we can check a few things.
@@ -536,6 +541,12 @@ void TekkenDiscord::UpdateStageSelect(uintptr_t baseAddress)
 
 void TekkenDiscord::UpdateFallback()
 {
+	// If we've taken a snapshot of the bowling state, don't bother updating this.
+	if (status.bowling_snapshot)
+	{
+		return;
+	}
+
 	if (status.lobby_valid)
 	{
 		status.state = "Player Match";
