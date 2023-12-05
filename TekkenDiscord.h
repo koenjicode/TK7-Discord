@@ -38,9 +38,13 @@ public:
 
 	virtual void FetchAndUpdateDiscordStatus();
 
+	void UpdateCustomization(uintptr_t baseAddress);
+
 	void UpdateLobbyInformation(uintptr_t baseAddress);
 
 	void UpdateInGame(uintptr_t baseAddress);
+
+	void StartTimer();
 
 	void UpdateOutGame(uintptr_t baseAddress);
 
@@ -50,9 +54,13 @@ public:
 
 	void UpdateFallback();
 
+	void UpdateOutGameFallback();
+
 	virtual void OnModMenuButtonPressed() override;
 
-	virtual bool IsInMatch();
+	virtual bool IsPlayerSpawned(uintptr_t baseAddress, uintptr_t playerOffset);
+
+	virtual bool IsInMatch(uintptr_t baseAddress);
 
 	virtual bool IsMultiplePlayerGameMode();
 

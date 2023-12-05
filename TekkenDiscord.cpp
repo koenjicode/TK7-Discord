@@ -200,27 +200,56 @@ void TekkenDiscord::DX11Present(ID3D11Device* pDevice, ID3D11DeviceContext* pCon
 
 void TekkenDiscord::FetchAndUpdateDiscordStatus()
 {
+	UpdateFallback();
+
 	uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(nullptr);
 	UpdateLobbyInformation(baseAddress);
 
-	if (IsInMatch())
+
+	// Check if one character is spawned to begin with, if so we can check a few things.
+	int playerOffset = 0x34DF630;
+	if (IsPlayerSpawned(baseAddress, playerOffset))
 	{
-		UpdateInGame(baseAddress);
+		// Check if we're in customization.
+		TekkenOverlayCommon::DataAccess::ObjectProxy<int> game_mode{ baseAddress, 0x379B158, 0x8, 0x8, 0x0 , 0x470 , 0x10 };
+		if (game_mode == 7)
+		{
+			UpdateCustomization(baseAddress);
+		}
+		else
+		{
+			if (IsInMatch(baseAddress))
+			{
+				UpdateInGame(baseAddress);
+			}
+			else
+			{
+				UpdateOutGame(baseAddress);
+			}
+		}
 	}
-	else
+}
+
+void TekkenDiscord::UpdateCustomization(uintptr_t baseAddress)
+{
+	StartTimer();
+
+	status.state = "Customization Mode";
+
+	TekkenOverlayCommon::DataAccess::ObjectProxy<bool> is_char_visible{ baseAddress , 0x34DF630 , 0x8 };
+	if (is_char_visible)
 	{
-		UpdateOutGame(baseAddress);
+		TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p1{ baseAddress , 0x34DF630 , 0xD8 };
+		std::string text = string_format("Customizing %s", tekkenCharacters[char_p1]);
+		status.details = text.c_str();
+		status.character = char_p1;
 	}
 }
 
 void TekkenDiscord::UpdateInGame(uintptr_t baseAddress)
 {
-	// Enable a timer as soon as we enter in a match.
-	if (!status.timerEnabled)
-	{
-		status.startTime = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		status.timerEnabled = true;
-	}
+	StartTimer();
+
 
 	// Ensure that the game mode is valid.
 	TekkenOverlayCommon::DataAccess::ObjectProxy<int> game_mode{ baseAddress, 0x379B158, 0x8, 0x8, 0x0 , 0x470 , 0x10 };
@@ -334,10 +363,20 @@ void TekkenDiscord::UpdateInGame(uintptr_t baseAddress)
 	status.currentGameState = game_state;
 }
 
+void TekkenDiscord::StartTimer()
+{
+	// Enable a timer as soon as we enter in a match.
+	if (!status.timerEnabled)
+	{
+		status.startTime = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		status.timerEnabled = true;
+	}
+}
+
 void TekkenDiscord::UpdateOutGame(uintptr_t baseAddress)
 {
 	// Update Fallback
-	UpdateFallback();
+	UpdateOutGameFallback();
 
 	TekkenOverlayCommon::DataAccess::ObjectProxy<int> character_select_p1{ baseAddress,  0x034D65C0, 0x508 };
 
@@ -449,6 +488,10 @@ void TekkenDiscord::UpdateFallback()
 	status.stage = -1;
 	status.gameMode = -1;
 	status.startTime = 0;
+}
+
+void TekkenDiscord::UpdateOutGameFallback()
+{
 	status.timerEnabled = false;
 	status.side_snapshot_taken = false;
 }
@@ -537,23 +580,34 @@ void TekkenDiscord::OnModMenuButtonPressed()
 
 }
 
-bool TekkenDiscord::IsInMatch()
+bool TekkenDiscord::IsPlayerSpawned(uintptr_t baseAddress, uintptr_t playerOffset)
 {
-	uintptr_t baseAddress = (uintptr_t)GetModuleHandleA(nullptr);
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_pointer{ baseAddress,  playerOffset, 0x218, 0x0 };
+	if (!move_pointer.IsValid() || move_pointer == 0 || move_pointer == -1)
+	{
+		return false;
+	}
+
+	TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_anim_pointer{ baseAddress, playerOffset, 0x218, 0x10, 0x0 };
+	if (!move_anim_pointer.IsValid() || move_anim_pointer == 0 || move_anim_pointer == -1)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool TekkenDiscord::IsInMatch(uintptr_t baseAddress)
+{
 	int playerOffset[2] = { 0x34DF630, 0x34DF628};
-	for (int i = 0; i < 2; i++) {
+	if (IsPlayerSpawned(baseAddress, playerOffset[0]))
+	{
+		return false;
+	}
 
-		TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_pointer{ baseAddress,  playerOffset[i], 0x218, 0x0 };
-		if (!move_pointer.IsValid() || move_pointer == 0 || move_pointer == -1)
-		{
-			return false;
-		}
-
-		TekkenOverlayCommon::DataAccess::ObjectProxy<int> move_anim_pointer{ baseAddress, playerOffset[i], 0x218, 0x10, 0x0 };
-		if (!move_anim_pointer.IsValid() || move_anim_pointer == 0 || move_anim_pointer == -1)
-		{
-			return false;
-		}
+	if (IsPlayerSpawned(baseAddress, playerOffset[1]))
+	{
+		return false;
 	}
 
 	return true;
