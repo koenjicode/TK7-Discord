@@ -340,7 +340,13 @@ void TekkenDiscord::UpdateInGame(uintptr_t baseAddress)
 		// If the game mode is non-round important game mode we don't show the round.
 		if (game_mode == 0 || game_mode == 5 || game_mode == 15)
 		{
-			if (game_mode == 15)
+			if (game_mode == 5)
+			{
+				TekkenOverlayCommon::DataAccess::ObjectProxy<int> story_chapter_count{ baseAddress, 0x34D6C10 , 0x28 , 0x9A4 };
+				std::string text = string_format("Chapter %s: %s", std::to_string(story_chapter_count), tekkenGameStates[game_state]);
+				status.details = text.c_str();
+			}
+			else if (game_mode == 15)
 			{
 				status.details = "Searching For Opponent";
 			}
