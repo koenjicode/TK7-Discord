@@ -2,6 +2,9 @@
 #include "Mod/Mod.h"
 #include <tekken_discord_manager.h>
 #include <ObjectProxy.h>
+#include "discord.h"
+#include <TekkenEntities.h>
+#include <chrono>
 
 class TekkenDiscord : public Mod
 {
@@ -35,6 +38,8 @@ public:
 
 	//DX11 hook for when an image will be presented to the screen
 	virtual void DX11Present(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, ID3D11RenderTargetView* pRenderTargetView) override;
+
+	void SetFallbackGraphics(discord::Activity& activity);
 
 	virtual void FetchAndUpdateDiscordStatus();
 

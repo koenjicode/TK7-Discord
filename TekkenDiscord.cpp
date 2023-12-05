@@ -1,8 +1,5 @@
 #include "TekkenDiscord.h"
 #include "Utilities/MinHook.h"
-#include "discord.h"
-#include <TekkenEntities.h>
-#include <chrono>
 
 discord::Core* core{};
 tekkendiscord::TekkenStatus status{};
@@ -174,20 +171,17 @@ void TekkenDiscord::DX11Present(ID3D11Device* pDevice, ID3D11DeviceContext* pCon
 					s2.append(std::to_string(status.stage));
 
 					activity.GetAssets().SetLargeText(tekkenStages[status.stage].c_str());
+					activity.GetAssets().SetLargeImage(s2.c_str());
 				}
 				else
 				{
-					s2 = "fallback2";
+					SetFallbackGraphics(activity);
 				}
-
-				activity.GetAssets().SetLargeImage(s2.c_str());
 			}
 			else
 			{
-				activity.GetAssets().SetLargeImage("fallback2");
+				SetFallbackGraphics(activity);
 
-				std::string text = string_format("T7Discord %s", versionNumber);
-				activity.GetAssets().SetLargeText(text.c_str());
 			}
 			
 			activity.GetTimestamps().SetStart(status.startTime);
@@ -204,6 +198,14 @@ void TekkenDiscord::DX11Present(ID3D11Device* pDevice, ID3D11DeviceContext* pCon
 			core->RunCallbacks();
 		}
 	}
+}
+
+void TekkenDiscord::SetFallbackGraphics(discord::Activity& activity)
+{
+	activity.GetAssets().SetLargeImage("fallback2");
+
+	std::string text = string_format("T7Discord %s", versionNumber);
+	activity.GetAssets().SetLargeText(text.c_str());
 }
 
 void TekkenDiscord::FetchAndUpdateDiscordStatus()
