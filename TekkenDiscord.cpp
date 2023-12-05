@@ -168,11 +168,19 @@ void TekkenDiscord::DX11Present(ID3D11Device* pDevice, ID3D11DeviceContext* pCon
 			if (status.stage > -1)
 			{
 				std::string s2;
-				s2.append("stg_");
-				s2.append(std::to_string(status.stage));
+				if (tekkenStages.count(status.stage))
+				{
+					s2.append("stg_");
+					s2.append(std::to_string(status.stage));
+
+					activity.GetAssets().SetLargeText(tekkenStages[status.stage].c_str());
+				}
+				else
+				{
+					s2 = "fallback2";
+				}
 
 				activity.GetAssets().SetLargeImage(s2.c_str());
-				activity.GetAssets().SetLargeText(tekkenStages[status.stage].c_str());
 			}
 			else
 			{
@@ -315,7 +323,7 @@ void TekkenDiscord::UpdateInGame(uintptr_t baseAddress)
 		
 	}
 
-	// If Unknown Game Mode: Save to assume that we're waiting for something. So we'll just say waiting.
+	// If Unknown Game Mode: Safe to assume that we're waiting for something. So we'll just say waiting.
 	TekkenOverlayCommon::DataAccess::ObjectProxy<int> game_state{ baseAddress + 0x34CD4F4 };
 	if (!tekkenGameStates.count(game_state))
 	{
@@ -366,7 +374,7 @@ void TekkenDiscord::UpdateInGame(uintptr_t baseAddress)
 				TekkenOverlayCommon::DataAccess::ObjectProxy<bool> is_player_right_side{ baseAddress + 0x344788C };
 				TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p1{ baseAddress , 0x34DF630 , 0xD8 };
 				TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p2{ baseAddress , 0x34DF628 , 0xD8 };
-				TekkenOverlayCommon::DataAccess::ObjectProxy<int> player_char;
+				int player_char;
 
 				// If we're playing online we need to check if sides have been reversed.
 				if (game_mode != 4)
@@ -538,7 +546,12 @@ void TekkenDiscord::UpdateFallback()
 	}
 
 	status.details = "Waiting";
-	status.character = -1;
+
+	if (!status.side_snapshot_taken)
+	{
+		status.character = -1;
+	}
+	
 	status.stage = -1;
 	status.gameMode = -1;
 }
