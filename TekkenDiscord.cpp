@@ -232,17 +232,23 @@ void TekkenDiscord::FetchAndUpdateDiscordStatus()
 
 void TekkenDiscord::UpdateCustomization(uintptr_t baseAddress)
 {
-	StartTimer();
 
 	status.state = "Customization Mode";
 
 	TekkenOverlayCommon::DataAccess::ObjectProxy<bool> is_char_visible{ baseAddress , 0x34DF630 , 0x8 };
 	if (is_char_visible)
 	{
+		StartTimer();
+
 		TekkenOverlayCommon::DataAccess::ObjectProxy<int> char_p1{ baseAddress , 0x34DF630 , 0xD8 };
-		std::string text = string_format("Customizing %s", tekkenCharacters[char_p1]);
-		status.details = text.c_str();
+		status.details = "Customizing Character";
 		status.character = char_p1;
+	}
+	else
+	{
+		UpdateOutGameFallback();
+
+		status.details = "Selecting Character";
 	}
 }
 
@@ -487,13 +493,13 @@ void TekkenDiscord::UpdateFallback()
 	status.character = -1;
 	status.stage = -1;
 	status.gameMode = -1;
-	status.startTime = 0;
 }
 
 void TekkenDiscord::UpdateOutGameFallback()
 {
 	status.timerEnabled = false;
 	status.side_snapshot_taken = false;
+	status.startTime = 0;
 }
 
 void TekkenDiscord::UpdateLobbyInformation(uintptr_t baseAddress)
